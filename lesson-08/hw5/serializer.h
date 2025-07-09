@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <gtest/gtest.h>
 
 enum class Error
 {

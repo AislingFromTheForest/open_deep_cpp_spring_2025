@@ -41,138 +41,167 @@ struct Data2
     }
 };
 
-int main()
-{
+
+TEST(EqualityTest, TestCorrectnessData_1) {
     std::stringstream stream;
     Serializer serializer(stream);
     Deserializer deserializer(stream);
     Error err;
 
+    Data x {3, true, 4};
+    Data y {0, false, 0};
 
-    // DATA
-    {
-        Data x {3, true, 4};
-        Data y {0, false, 0};
+    serializer.save(x);
+    err = deserializer.load(y);
 
-        serializer.save(x);
-        err = deserializer.load(y);
+    ASSERT_EQ(err, Error::NoError);
+    ASSERT_EQ(x.a, y.a);
+    ASSERT_EQ(x.b, y.b);
+    ASSERT_EQ(x.c, y.c);
+}
 
-        assert(err == Error::NoError);
-        assert(x.a == y.a);
-        assert(x.b == y.b);
-        assert(x.c == y.c);
-    }
 
-    {
-        Data x {500, false, 1000};
-        Data y {0, false, 0};
+TEST(EqualityTest, TestCorrectnessData_2) {
+    std::stringstream stream;
+    Serializer serializer(stream);
+    Deserializer deserializer(stream);
+    Error err;
 
-        serializer.save(x);
-        err = deserializer.load(y);
+    Data x {500, false, 1000};
+    Data y {0, false, 0};
 
-        assert(err == Error::NoError);
-        assert(x.a == y.a);
-        assert(x.b == y.b);
-        assert(x.c == y.c);
-    }
+    serializer.save(x);
+    err = deserializer.load(y);
 
-    {
-        Data x  {500, false, 1000};
-        Data xx {5000, true, 10000};
-        Data y  {0, false, 0};
-        Data yy {0, false, 0};
+    ASSERT_EQ(err, Error::NoError);
+    ASSERT_EQ(x.a, y.a);
+    ASSERT_EQ(x.b, y.b);
+    ASSERT_EQ(x.c, y.c);
+}
 
-        serializer.save(x);
-        serializer.save(xx);
+TEST(EqualityTest, TestCorrectnessData_3) {
+    std::stringstream stream;
+    Serializer serializer(stream);
+    Deserializer deserializer(stream);
+    Error err;
 
-        err = deserializer.load(y);
-        assert(err == Error::NoError);
-        assert(x.a == y.a);
-        assert(x.b == y.b);
-        assert(x.c == y.c);
+    Data x  {500, false, 1000};
+    Data xx {5000, true, 10000};
+    Data y  {0, false, 0};
+    Data yy {0, false, 0};
 
-        err = deserializer.load(yy);
-        assert(err == Error::NoError);
-        assert(xx.a == yy.a);
-        assert(xx.b == yy.b);
-        assert(xx.c == yy.c);
-    }
+    serializer.save(x);
+    serializer.save(xx);
 
-    {
-        Data x  {500, false, 1000};
-        Data xx {5000, true, 10000};
-        Data y  {0, false, 0};
-        Data yy {0, false, 0};
+    err = deserializer.load(y);
+    ASSERT_EQ(err, Error::NoError);
+    ASSERT_EQ(x.a, y.a);
+    ASSERT_EQ(x.b, y.b);
+    ASSERT_EQ(x.c, y.c);
 
-        serializer.save(x);
-        stream << "false msg";
-        serializer.save(xx);
+    err = deserializer.load(yy);
+    ASSERT_EQ(err, Error::NoError);
+    ASSERT_EQ(xx.a, yy.a);
+    ASSERT_EQ(xx.b, yy.b);
+    ASSERT_EQ(xx.c, yy.c);
+}
 
-        err = deserializer.load(y);
-        assert(err == Error::NoError);
-        assert(x.a == y.a);
-        assert(x.b == y.b);
-        assert(x.c == y.c);
+TEST(EqualityTest, TestIncorrectnessData) {
+    std::stringstream stream;
+    Serializer serializer(stream);
+    Deserializer deserializer(stream);
+    Error err;
 
-        err = deserializer.load(yy);
-        assert(err == Error::CorruptedArchive);
-    }
+    Data x  {500, false, 1000};
+    Data xx {5000, true, 10000};
+    Data y  {0, false, 0};
+    Data yy {0, false, 0};
 
-    stream = std::stringstream();
+    serializer.save(x);
+    stream << "false msg";
+    serializer.save(xx);
 
-    // DATA2
-    {
-        Data2 x {3, true, 4, false};
-        Data2 y {0, false, 0, false};
+    err = deserializer.load(y);
+    ASSERT_EQ(err, Error::NoError);
+    ASSERT_EQ(x.a, y.a);
+    ASSERT_EQ(x.b, y.b);
+    ASSERT_EQ(x.c, y.c);
 
-        serializer.save(x);
-        err = deserializer.load(y);
+    err = deserializer.load(yy);
+    ASSERT_EQ(err, Error::CorruptedArchive);
+}
 
-        assert(err == Error::NoError);
-        assert(x.a == y.a);
-        assert(x.b == y.b);
-        assert(x.c == y.c);
-        assert(x.d == y.d);
-    }
 
-    {
-        Data2 x {500, false, 1000, true};
-        Data2 y {0, false, 0, false};
+TEST(EqualityTest, TestCorrectnessData_4) {
+    std::stringstream stream;
+    Serializer serializer(stream);
+    Deserializer deserializer(stream);
+    Error err;
 
-        serializer.save(x);
-        err = deserializer.load(y);
+    Data2 x {3, true, 4, false};
+    Data2 y {0, false, 0, false};
 
-        assert(err == Error::NoError);
-        assert(x.a == y.a);
-        assert(x.b == y.b);
-        assert(x.c == y.c);
-        assert(x.d == y.d);
-    }
+    serializer.save(x);
+    err = deserializer.load(y);
 
-    {
-        Data2 x  {500, false, 1000, true};
-        Data2 xx {5000, true, 10000, false};
-        Data2 y  {0, false, 0};
-        Data2 yy {0, false, 0};
+    ASSERT_EQ(err, Error::NoError);
+    ASSERT_EQ(x.a, y.a);
+    ASSERT_EQ(x.b, y.b);
+    ASSERT_EQ(x.c, y.c);
+    ASSERT_EQ(x.d, y.d);
+}
 
-        serializer.save(x);
-        serializer.save(xx);
 
-        err = deserializer.load(y);
-        assert(err == Error::NoError);
-        assert(x.a == y.a);
-        assert(x.b == y.b);
-        assert(x.c == y.c);
-        assert(x.d == y.d);
+TEST(EqualityTest, TestCorrectnessData_5) {
+    std::stringstream stream;
+    Serializer serializer(stream);
+    Deserializer deserializer(stream);
+    Error err;
 
-        err = deserializer.load(yy);
-        assert(err == Error::NoError);
-        assert(xx.a == yy.a);
-        assert(xx.b == yy.b);
-        assert(xx.d == yy.d);
-    }
+    Data2 x {500, false, 1000, true};
+    Data2 y {0, false, 0, false};
 
-    std::cout << "TESTS PASSED" << std::endl;
+    serializer.save(x);
+    err = deserializer.load(y);
 
-    return 0;
+    ASSERT_EQ(err, Error::NoError);
+    ASSERT_EQ(x.a, y.a);
+    ASSERT_EQ(x.b, y.b);
+    ASSERT_EQ(x.c, y.c);
+    ASSERT_EQ(x.d, y.d);
+}
+
+TEST(EqualityTest, TestCorrectnessData_6) {
+    std::stringstream stream;
+    Serializer serializer(stream);
+    Deserializer deserializer(stream);
+    Error err;
+
+    Data2 x  {500, false, 1000, true};
+    Data2 xx {5000, true, 10000, false};
+    Data2 y  {0, false, 0};
+    Data2 yy {0, false, 0};
+
+    serializer.save(x);
+    serializer.save(xx);
+
+    err = deserializer.load(y);
+    ASSERT_EQ(err, Error::NoError);
+    ASSERT_EQ(x.a, y.a);
+    ASSERT_EQ(x.b, y.b);
+    ASSERT_EQ(x.c, y.c);
+    ASSERT_EQ(x.d, y.d);
+
+    err = deserializer.load(yy);
+    ASSERT_EQ(err, Error::NoError);
+    ASSERT_EQ(xx.a, yy.a);
+    ASSERT_EQ(xx.b, yy.b);
+    ASSERT_EQ(xx.c, yy.c);
+    ASSERT_EQ(xx.d, yy.d);
+}
+
+int main(int argc, char **argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
