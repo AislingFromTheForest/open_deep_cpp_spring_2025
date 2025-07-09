@@ -3,10 +3,26 @@
 #include <iostream>
 #include <unordered_map>
 #include <concepts>
+#include <gtest/gtest.h>
 
 template<typename T>
 concept Printable = requires(T x) {
     { std::cout << x } -> std::same_as<std::ostream&>;
+};
+
+class MYexception: public std::exception
+{
+public:
+    MYexception(const std::string& message) : message(message)
+    {}
+
+    const char* what() const noexcept override
+    {
+        return message.c_str();
+    }
+
+private:
+    std::string message;
 };
 
 class Serializer
@@ -95,7 +111,7 @@ void validation(const std::string& input, uint64_t count)
         if ((l != std::string::npos && r == std::string::npos) || 
             (l == std::string::npos && r != std::string::npos))
         {
-            throw std::runtime_error("INCORRECT INPUT");
+            throw MYexception("INCORRECT INPUT");
         }
 
         if (l == std::string::npos && r == std::string::npos)
@@ -105,7 +121,7 @@ void validation(const std::string& input, uint64_t count)
 
         if (l > r)
         {
-            throw std::runtime_error("INCORRECT INPUT");
+            throw MYexception("INCORRECT INPUT");
         }
 
         std::string str2uint = input.substr(l + 1, r - l - 1);
@@ -113,7 +129,7 @@ void validation(const std::string& input, uint64_t count)
 
         if (!is_str_digit(str2uint))
         {
-            throw std::runtime_error("INCORRECT INPUT");
+            throw MYexception("INCORRECT INPUT");
         }
 
         _uint = std::stoull(str2uint);
@@ -121,7 +137,7 @@ void validation(const std::string& input, uint64_t count)
         if (_uint >= count)
         {
             
-            throw std::runtime_error("INCORRECT INPUT");
+            throw MYexception("INCORRECT INPUT");
         }
 
         pos = r + 1;
@@ -160,91 +176,101 @@ std::string format(const std::string& input, ArgsT... args)
     return result;
 }
 
-void TEST_INPUT()
+TEST(TEST_INPUT, 1)
 {
-
-    std::string input;
-    std::string text;
-
+    std::string input = "{{1}+{1} = {0}";
     try
     {
-        input = "{{1}+{1} = {0}";
-        text = format(input, 2, "one");
+        format(input, 2, "one");
     }
-    catch(const std::exception& e)
+    catch(const MYexception& e)
     {
-        assert(std::string(e.what()) == "INCORRECT INPUT");
-    }
-
-    try
-    {
-        input = "{1}}+{1} = {0}";
-        text = format(input, 2, "one");
-    }
-    catch(const std::exception& e)
-    {
-        assert(std::string(e.what()) == "INCORRECT INPUT");
-    }
-
-    try
-    {
-        input = "{1a}+{1} = {0}";
-        text = format(input, 2, "one");
-    }
-    catch(const std::exception& e)
-    {
-        assert(std::string(e.what()) == "INCORRECT INPUT");
-    }
-
-    try
-    {
-        input = "{2}+{1} = {0}";
-        text = format(input, 2, "one");
-    }
-    catch(const std::exception& e)
-    {
-        assert(std::string(e.what()) == "INCORRECT INPUT");
-    }
-
-    try
-    {
-        input = "{0}+{1} = {}";
-        text = format(input, 2, "one");
-    }
-    catch(const std::exception& e)
-    {
-        assert(std::string(e.what()) == "INCORRECT INPUT");
+        ASSERT_STREQ(e.what(), "INCORRECT INPUT");
     }
 }
 
-void TEST_CORRECTNESS()
+TEST(TEST_INPUT, 2)
 {
-    std::string input;
-    std::string text;
-
-    input = "{1}+{1} = {0}";
-    text  = format(input, 2, "one");
-    assert(text == "one+one = 2");
-
-    input = "{0}+{1}+{2} = {3}";
-    text  = format(input, "one", 2, 'c', true);
-    assert(text == "one+2+c = 1");
-
-    input = "{0}+{1}+{2}+{3} = {4}";
-    text  = format(input, "one", 2, 'c', "{haha}", true);
-    assert(text == "one+2+c+{haha} = 1");
-
-    input = "{0}+{1}+{2}+{3}+{3}+{3} = {4}";
-    text  = format(input, "one", 2, 'c', "{haha}", true);
-    assert(text == "one+2+c+{haha}+{haha}+{haha} = 1");
+    std::string input = "{1}}+{1} = {0}";
+    try
+    {
+        format(input, 2, "one");
+    }
+    catch(const MYexception& e)
+    {
+        ASSERT_STREQ(e.what(), "INCORRECT INPUT");
+    }
 }
 
-int main()
+TEST(TEST_INPUT, 3)
 {
-    TEST_INPUT();
-    TEST_CORRECTNESS();
+    std::string input = "{1a}+{1} = {0}";
+    try
+    {
+        format(input, 2, "one");
+    }
+    catch(const MYexception& e)
+    {
+        ASSERT_STREQ(e.what(), "INCORRECT INPUT");
+    }
+}
 
-    std::cout << "TESTS PASSED" << std::endl;
+TEST(TEST_INPUT, 4)
+{
+    std::string input = "{2}+{1} = {0}";
+    try
+    {
+        format(input, 2, "one");
+    }
+    catch(const MYexception& e)
+    {
+        ASSERT_STREQ(e.what(), "INCORRECT INPUT");
+    }
+}
 
-    return 0;
+TEST(TEST_INPUT, 5)
+{
+    std::string input = "{0}+{1} = {}";
+    try
+    {
+        format(input, 2, "one");
+    }
+    catch(const MYexception& e)
+    {
+        ASSERT_STREQ(e.what(), "INCORRECT INPUT");
+    }
+}
+
+TEST(TEST_CORRECTNESS, 1)
+{
+    std::string input = "{1}+{1} = {0}";
+    std::string answer = format(input, 2, "one");
+    ASSERT_STREQ("one+one = 2", answer.c_str());
+}
+
+TEST(TEST_CORRECTNESS, 2)
+{
+    std::string input = "{0}+{1}+{2} = {3}";
+    std::string answer = format(input, "one", 2, 'c', true);
+    ASSERT_STREQ("one+2+c = 1", answer.c_str());
+}
+
+TEST(TEST_CORRECTNESS, 3)
+{
+    std::string input = "{0}+{1}+{2}+{3} = {4}";
+    std::string answer = format(input, "one", 2, 'c', "{haha}", true);
+    ASSERT_STREQ("one+2+c+{haha} = 1", answer.c_str());
+}
+
+TEST(TEST_CORRECTNESS, 4)
+{
+    std::string input = "{0}+{1}+{2}+{3}+{3}+{3} = {4}";
+    std::string answer = format(input, "one", 2, 'c', "{haha}", true);
+    ASSERT_STREQ("one+2+c+{haha}+{haha}+{haha} = 1", answer.c_str());
+}
+
+int main(int argc, char **argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
